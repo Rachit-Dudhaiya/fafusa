@@ -1,0 +1,1542 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STOP! - The Ultimate Word Party Game</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts & Font Awesome Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Bungee&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        display: ['"Bungee"', 'cursive'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#fdf4ff',
+                            100: '#fae8ff',
+                            500: '#d946ef',
+                            600: '#c026d3',
+                            700: '#a21caf',
+                        },
+                        funky: {
+                            yellow: '#FDE047',
+                            coral: '#FF6B6B',
+                            teal: '#2DD4BF',
+                            indigo: '#6366F1',
+                            dark: '#0F172A',
+                            card: '#1E293B',
+                        }
+                    },
+                    animation: {
+                        'bounce-short': 'bounce 0.8s ease-in-out 2',
+                        'pulse-fast': 'pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'spin-slow': 'spin 3s linear infinite'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        html,
+        body {
+            max-width: 100vw;
+            overflow-x: hidden;
+        }
+
+        /* Custom scrollbars and glowing effects */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 9999px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+
+        .text-shadow-pop {
+            text-shadow: 3px 3px 0px rgba(0, 0, 0, 0.45);
+        }
+
+        .neon-border {
+            box-shadow: 0 0 15px rgba(217, 70, 239, 0.4);
+        }
+    </style>
+</head>
+
+<body
+    class="bg-slate-950 text-slate-100 min-h-screen font-sans selection:bg-brand-500 selection:text-white flex flex-col justify-between overflow-x-hidden">
+
+    <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur-md sticky top-0 z-40 px-4 py-3 sm:px-6">
+        <div class="max-w-6xl mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-3 cursor-pointer" onclick="game.showHomePrompt()">
+                <div
+                    class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-brand-600 to-funky-coral flex items-center justify-center text-white font-display text-xl shadow-lg transform -rotate-3 hover:rotate-0 transition">
+                    S!
+                </div>
+                <div>
+                    <h1
+                        class="font-display tracking-wider text-xl sm:text-2xl bg-gradient-to-r from-yellow-300 via-pink-400 to-cyan-300 bg-clip-text text-transparent">
+                        STOP! PARTY
+                    </h1>
+                    <p class="text-[10px] text-slate-400 font-semibold tracking-wide uppercase">Name • Place • Animal •
+                        Thing</p>
+                </div>
+            </div>
+
+            <!-- Quick Status & Sound Toggle -->
+            <div class="flex items-center gap-2 sm:gap-4">
+                <div id="roomBadge"
+                    class="hidden text-xs bg-slate-800 border border-slate-700 rounded-xl px-3 py-1.5 flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span class="text-slate-400">ROOM:</span>
+                    <span id="roomBadgeCode" class="font-mono font-bold text-yellow-300">ABCD</span>
+                    <button onclick="game.copyRoomCode()" title="Copy Code" class="hover:text-cyan-300 ml-1">
+                        <i class="fa-regular fa-copy"></i>
+                    </button>
+                    <div class="w-px h-4 bg-slate-700 mx-1"></div>
+                    <button onclick="game.leaveRoomPrompt()" title="Leave Room"
+                        class="hover:text-rose-400 text-slate-400 transition flex items-center gap-1 font-semibold pl-1">
+                        <i class="fa-solid fa-right-from-bracket"></i> Leave
+                    </button>
+                </div>
+
+                <button onclick="soundManager.toggleSound()" id="soundToggleBtn"
+                    class="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 transition"
+                    title="Toggle Sound">
+                    <i id="soundIcon" class="fa-solid fa-volume-high"></i>
+                </button>
+
+                <button onclick="game.openRulesModal()"
+                    class="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 transition"
+                    title="Game Rules">
+                    <i class="fa-solid fa-circle-question"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 min-w-0 max-w-6xl w-full mx-auto p-4 sm:p-6 flex flex-col justify-center">
+
+        <!-- ================= VIEW 1: WELCOME & LOBBY SETUP ================= -->
+        <section id="screen-lobby" class="w-full min-w-0 max-w-2xl mx-auto space-y-6">
+            <!-- Hero Banner -->
+            <div class="text-center space-y-2 py-4">
+                <span
+                    class="inline-block px-3 py-1 text-xs font-bold uppercase tracking-widest text-brand-500 bg-brand-500/10 rounded-full border border-brand-500/20">
+                    Fast-Paced Vocabulary Showdown
+                </span>
+                <h2 class="text-3xl sm:text-5xl font-extrabold text-white tracking-tight">
+                    Think Fast. <span
+                        class="bg-gradient-to-r from-yellow-300 to-pink-500 bg-clip-text text-transparent">Hit
+                        STOP!</span>
+                </h2>
+                <p class="text-slate-400 text-sm sm:text-base max-w-md mx-auto">
+                    Roll the alphabet, write down words starting with the letter, and shout STOP before your friends do!
+                </p>
+            </div>
+
+            <!-- Setup Card -->
+            <div
+                class="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 relative overflow-hidden">
+                <div
+                    class="absolute top-0 right-0 -mt-8 -mr-8 w-36 h-36 bg-brand-500/10 rounded-full blur-2xl pointer-events-none">
+                </div>
+
+                <!-- Step 1: Player Name Input -->
+                <div id="step-name" class="space-y-6">
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-2">
+                            <i class="fa-solid fa-user-astronaut mr-2 text-cyan-400"></i>Your Player Nickname
+                        </label>
+                        <input type="text" id="playerNameInput" maxlength="18" placeholder="e.g., Captain Speedy"
+                            class="w-full bg-slate-950 border border-slate-700 rounded-2xl px-4 py-3 text-lg font-semibold text-white placeholder-slate-500 focus:outline-none focus:border-brand-500 transition">
+                    </div>
+                    <button onclick="game.goToStep('mode')"
+                        class="w-full py-4 rounded-2xl font-display text-lg tracking-wider bg-gradient-to-r from-brand-600 via-pink-600 to-funky-coral hover:from-brand-500 hover:to-pink-500 text-white shadow-xl hover:shadow-brand-500/25 transition transform active:scale-98 flex items-center justify-center gap-3">
+                        NEXT <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+
+                <!-- Step 2: Mode Selector -->
+                <div id="step-mode" class="hidden space-y-6">
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-2">
+                            <i class="fa-solid fa-gamepad mr-2 text-pink-400"></i>What do you want to do?
+                        </label>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <button type="button" onclick="game.selectLobbyMode('create')"
+                                class="p-4 rounded-2xl border text-left flex items-start gap-3 transition bg-slate-950 border-brand-500 hover:bg-slate-900 shadow-md">
+                                <div
+                                    class="w-10 h-10 rounded-xl bg-brand-600/20 text-brand-400 flex items-center justify-center font-bold text-lg shrink-0">
+                                    <i class="fa-solid fa-house-medical"></i>
+                                </div>
+                                <div>
+                                    <p class="font-bold text-white text-sm">Create Room</p>
+                                    <p class="text-xs text-slate-400">Host game & invite friends</p>
+                                </div>
+                            </button>
+
+                            <button type="button" onclick="game.selectLobbyMode('join')"
+                                class="p-4 rounded-2xl border text-left flex items-start gap-3 transition bg-slate-950/40 border-slate-800 hover:border-cyan-500 hover:bg-slate-900 shadow-md">
+                                <div
+                                    class="w-10 h-10 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center font-bold text-lg shrink-0">
+                                    <i class="fa-solid fa-right-to-bracket"></i>
+                                </div>
+                                <div>
+                                    <p class="font-bold text-white text-sm">Join Room</p>
+                                    <p class="text-xs text-slate-400">Enter code to join game</p>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+                    <button onclick="game.goToStep('name')"
+                        class="w-full py-3 rounded-xl font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 transition">
+                        Back
+                    </button>
+                </div>
+
+                <!-- Step 3: Host Settings (Create Room) -->
+                <div id="step-host" class="hidden space-y-6">
+                    <div class="space-y-4">
+                        <span
+                            class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2 mb-2">
+                            <i class="fa-solid fa-sliders text-yellow-400"></i> Host Settings & Categories (<span
+                                id="catCountPill">6</span>)
+                        </span>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs text-slate-400 mb-1 font-semibold">Timer Duration</label>
+                                <select id="timerSelect"
+                                    class="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-brand-500">
+                                    <option value="60">1 Minute (60s) - Fast</option>
+                                    <option value="90" selected>1.5 Minutes (90s) - Balanced</option>
+                                    <option value="120">2 Minutes (120s) - Relaxed</option>
+                                    <option value="180">3 Minutes (180s)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs text-slate-400 mb-1 font-semibold">Total Rounds</label>
+                                <select id="roundsSelect"
+                                    class="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-brand-500">
+                                    <option value="3">3 Rounds</option>
+                                    <option value="5" selected>5 Rounds</option>
+                                    <option value="7">7 Rounds</option>
+                                    <option value="10">10 Rounds</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <label class="text-xs text-slate-400 font-semibold">Categories (Columns)</label>
+                                <button type="button" onclick="game.resetDefaultCategories()"
+                                    class="text-[11px] text-cyan-400 hover:underline">Reset to Default</button>
+                            </div>
+                            <div id="categoriesChipsList" class="flex flex-wrap gap-2 mb-3">
+                                <!-- Dynamically populated tags -->
+                            </div>
+                            <div class="flex gap-2">
+                                <input type="text" id="newCategoryInput" placeholder="Add custom..."
+                                    class="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-brand-500">
+                                <button type="button" onclick="game.addCustomCategory()"
+                                    class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-4 py-2 rounded-xl text-sm font-bold border border-slate-700 transition">
+                                    <i class="fa-solid fa-plus mr-1"></i> Add
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-3 pt-2 border-t border-slate-800">
+                        <button onclick="game.goToStep('mode')"
+                            class="py-4 px-6 rounded-2xl font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 transition">
+                            Back
+                        </button>
+                        <button onclick="game.startLobbyToAlphabet()"
+                            class="flex-1 py-4 rounded-2xl font-display text-lg tracking-wider bg-gradient-to-r from-brand-600 via-pink-600 to-funky-coral hover:from-brand-500 hover:to-pink-500 text-white shadow-xl hover:shadow-brand-500/25 transition transform active:scale-98 flex items-center justify-center gap-3">
+                            <i class="fa-solid fa-play"></i> START ROOM!
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 4: Join Room -->
+                <div id="step-join" class="hidden space-y-6">
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Enter
+                            4-Letter Room Code</label>
+                        <input type="text" id="joinRoomCodeInput" maxlength="6" uppercase placeholder="e.g. ABCD"
+                            class="w-full uppercase tracking-widest text-center font-mono text-3xl bg-slate-950 border border-slate-700 rounded-xl py-4 text-yellow-400 focus:outline-none focus:border-cyan-400">
+                    </div>
+                    <div class="flex gap-3 pt-2">
+                        <button onclick="game.goToStep('mode')"
+                            class="py-4 px-6 rounded-2xl font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 transition">
+                            Back
+                        </button>
+                        <button onclick="game.startLobbyToAlphabet()"
+                            class="flex-1 py-4 rounded-2xl font-display text-lg tracking-wider bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white shadow-xl transition transform active:scale-98 flex items-center justify-center gap-3">
+                            <i class="fa-solid fa-right-to-bracket"></i> JOIN ROOM
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="screen-letter" class="hidden w-full min-w-0 max-w-xl mx-auto text-center space-y-6">
+            <div
+                class="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-10 shadow-2xl relative overflow-hidden">
+                <div class="text-xs uppercase tracking-widest font-bold text-yellow-400 mb-2">
+                    Round <span id="letterRoundNum">1</span> of <span id="letterRoundTotal">5</span>
+                </div>
+                <h2 class="text-2xl sm:text-3xl font-extrabold text-white mb-4">
+                    Who's turn to pick a letter?
+                </h2>
+
+                <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4 mb-6 inline-flex items-center gap-3">
+                    <div
+                        class="w-10 h-10 rounded-xl bg-pink-500/20 text-pink-400 flex items-center justify-center font-bold">
+                        <i class="fa-solid fa-hand-pointer"></i>
+                    </div>
+                    <div class="text-left px-2">
+                        <p class="text-xs text-slate-400">Active Letter Picker:</p>
+                        <p id="currentPickerName" class="font-bold text-white text-lg">Player 1</p>
+                    </div>
+                </div>
+
+                <!-- Big Animated Alphabet Box -->
+                <div class="py-6 flex flex-col items-center justify-center">
+                    <div id="alphabetDisplayBox"
+                        class="w-40 h-40 sm:w-48 sm:h-48 rounded-3xl bg-gradient-to-b from-slate-800 to-slate-950 border-4 border-brand-500/80 flex items-center justify-center font-display text-7xl sm:text-8xl text-yellow-300 shadow-2xl shadow-brand-600/30 transition-all transform duration-150">
+                        A
+                    </div>
+                    <p id="rollerSubtext" class="text-slate-400 text-sm mt-4 font-medium animate-pulse">
+                        Press "Start A-Z Roll" to cycle letters!
+                    </p>
+                </div>
+
+                <!-- Letter Controls -->
+                <div class="space-y-3 max-w-sm mx-auto">
+                    <button id="startRollBtn" onclick="game.startAlphabetTicker()"
+                        class="w-full py-3.5 rounded-xl font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-rotate"></i> Start Roll (A, B, C...)
+                    </button>
+
+                    <button id="stopRollBtn" onclick="game.stopAlphabetTicker()" disabled
+                        class="w-full py-4 rounded-2xl font-display text-xl tracking-wider bg-rose-600 hover:bg-rose-500 text-white shadow-xl shadow-rose-600/40 opacity-40 cursor-not-allowed transition transform active:scale-95 flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-hand"></i> STOP!
+                    </button>
+
+                    <button id="confirmLetterBtn" onclick="game.beginRoundWithLetter()"
+                        class="hidden w-full py-3.5 rounded-xl font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg transition flex items-center justify-center gap-2">
+                        Let's Play with '<span id="pickedLetterConfirm">A</span>'! <i
+                            class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <section id="screen-gameplay" class="hidden w-full min-w-0 max-w-4xl mx-auto space-y-4">
+            <!-- Gameplay Top Status Bar -->
+            <div
+                class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 flex flex-wrap items-center justify-between gap-4 shadow-xl">
+                <!-- Target Letter Badge -->
+                <div class="flex items-center gap-3">
+                    <div
+                        class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-brand-600 to-yellow-400 flex items-center justify-center font-display text-3xl text-slate-950 font-black shadow-lg">
+                        <span id="activeLetterBadge">R</span>
+                    </div>
+                    <div>
+                        <div class="text-xs uppercase font-bold text-slate-400">Target Letter</div>
+                        <div class="text-sm sm:text-base font-extrabold text-white">Start with '<span
+                                id="activeLetterText" class="text-yellow-300">R</span>'</div>
+                    </div>
+                </div>
+
+                <!-- Timer Circle/Bar -->
+                <div class="flex items-center gap-3">
+                    <div class="text-right">
+                        <div class="text-xs uppercase font-bold text-slate-400">Time Left</div>
+                        <div id="gameplayTimerText" class="font-mono text-xl sm:text-2xl font-black text-white">01:30
+                        </div>
+                    </div>
+                    <div
+                        class="w-10 h-10 sm:w-12 sm:h-12 rounded-full border-4 border-slate-700 flex items-center justify-center relative">
+                        <i class="fa-solid fa-stopwatch text-slate-400" id="timerIcon"></i>
+                    </div>
+                </div>
+
+                <!-- Player Switcher (for Pass & Play) -->
+                <div id="activePlayerIndicator"
+                    class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 flex items-center gap-2 w-full sm:w-auto justify-center sm:justify-start">
+                    <i class="fa-solid fa-user text-cyan-400"></i>
+                    <span class="text-xs text-slate-400">Writing:</span>
+                    <span id="activePlayerName" class="font-bold text-white text-sm">Player 1</span>
+                </div>
+            </div>
+
+            <!-- Categories Input Grid Form -->
+            <div class="bg-slate-900 border border-slate-800 rounded-3xl p-5 sm:p-6 shadow-2xl space-y-5">
+                <div
+                    class="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-slate-800 pb-3 gap-2">
+                    <p class="text-xs font-bold uppercase tracking-wider text-slate-400">
+                        Fill all columns! First player to finish hits STOP:
+                    </p>
+                    <span id="completedFieldCount"
+                        class="text-xs font-semibold px-2 py-0.5 bg-slate-800 text-slate-300 rounded-md">
+                        0 / 6 Answered
+                    </span>
+                </div>
+
+                <form id="categoryInputsForm" onsubmit="event.preventDefault();"
+                    class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <!-- Dynamically populated input cards -->
+                </form>
+
+                <!-- Big Emergency STOP Button -->
+                <div
+                    class="pt-4 sm:border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div class="text-xs text-slate-400 text-center sm:text-left hidden sm:block">
+                        <span class="font-bold text-amber-400">Reminder:</span> Identical answers from 2 or more players
+                        earn <span class="font-bold text-white">0 points</span>! Be unique!
+                    </div>
+
+                    <button onclick="game.triggerPlayerStop()"
+                        class="fixed bottom-4 left-4 right-4 z-50 sm:static sm:w-auto px-8 py-4 rounded-2xl font-display text-xl tracking-wider bg-gradient-to-r from-red-600 via-rose-600 to-orange-600 hover:from-red-500 hover:to-orange-500 text-white shadow-2xl shadow-rose-600/50 transform active:scale-95 transition flex items-center justify-center gap-3 border-4 sm:border-0 border-slate-900">
+                        <i class="fa-solid fa-bell animate-bounce"></i> STOP THE ROUND!
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <section id="screen-scoring" class="hidden w-full min-w-0 max-w-5xl mx-auto space-y-6">
+            <div class="bg-slate-900 border border-slate-800 rounded-3xl p-4 sm:p-6 shadow-2xl space-y-6 min-w-0">
+                <!-- Review Header -->
+                <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-4">
+                    <div>
+                        <span
+                            class="px-3 py-1 bg-yellow-400/10 text-yellow-400 border border-yellow-400/20 text-xs font-bold rounded-full uppercase">
+                            Round <span id="scoringRoundNumber">1</span> Complete
+                        </span>
+                        <h2 class="text-2xl font-extrabold text-white mt-1">
+                            Answer Review & Scoring for Letter '<span id="scoringRoundLetter"
+                                class="text-yellow-300">R</span>'
+                        </h2>
+                        <p class="text-xs text-slate-400 mt-0.5">
+                            Identical words get 0 points. Unique words starting with the letter get 1 point. Host can
+                            override anytime.
+                        </p>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <button onclick="game.proceedToNextRoundOrFinish()"
+                            class="px-5 py-2.5 rounded-xl font-bold bg-brand-600 hover:bg-brand-500 text-white shadow-md transition flex items-center gap-2">
+                            Next Step <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Answers Comparison Table -->
+                <!-- Answers Comparison Cards -->
+                <div id="scoringCardsContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6 w-full">
+                    <!-- Dynamically populated review cards -->
+                </div>
+
+                <!-- Round Score Tally Summary Cards -->
+                <div class="space-y-2">
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">Current Standings</h3>
+                    <div id="standingsCardsGrid" class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        <!-- Dynamically populated score badges -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="screen-podium" class="hidden w-full max-w-xl mx-auto text-center space-y-6 py-6">
+            <div
+                class="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-10 shadow-2xl relative overflow-hidden">
+                <div
+                    class="w-20 h-20 mx-auto rounded-3xl bg-yellow-400/20 text-yellow-300 flex items-center justify-center text-4xl shadow-lg mb-4">
+                    <i class="fa-solid fa-trophy"></i>
+                </div>
+                <span
+                    class="text-xs font-bold uppercase tracking-widest text-brand-400 bg-brand-500/10 px-3 py-1 rounded-full border border-brand-500/20">
+                    Game Over!
+                </span>
+                <h2 class="text-3xl sm:text-4xl font-extrabold text-white mt-2">
+                    The Grand Champion
+                </h2>
+                <div id="winnerNameDisplay" class="text-3xl sm:text-4xl font-display text-yellow-300 my-2">
+                    Player 1
+                </div>
+                <p id="winnerScoreDisplay" class="text-sm font-semibold text-slate-400">Total: 45 Points</p>
+
+                <!-- Leaderboard Full List -->
+                <div class="my-6 bg-slate-950 border border-slate-800 rounded-2xl p-4 text-left divide-y divide-slate-800/80"
+                    id="finalLeaderboardList">
+                    <!-- Final standings -->
+                </div>
+
+                <!-- Rematch Actions -->
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <button onclick="game.restartSameSettings()"
+                        class="flex-1 py-3.5 rounded-xl font-bold bg-brand-600 hover:bg-brand-500 text-white shadow-lg transition">
+                        <i class="fa-solid fa-rotate-right mr-1"></i> Rematch (Same Rules)
+                    </button>
+                    <button onclick="game.resetToLobby()"
+                        class="flex-1 py-3.5 rounded-xl font-bold bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition">
+                        <i class="fa-solid fa-sliders mr-1"></i> Change Settings / Players
+                    </button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Floating Toast Message Container (replaces standard alerts) -->
+    <div id="toastNotification"
+        class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 pointer-events-none transition-all duration-300 max-w-sm w-full bg-slate-900 border border-slate-700 text-white p-4 rounded-2xl shadow-2xl flex items-center gap-3">
+        <div id="toastIcon"
+            class="w-9 h-9 rounded-xl bg-brand-500/20 text-brand-400 flex items-center justify-center font-bold shrink-0">
+            <i class="fa-solid fa-bell"></i>
+        </div>
+        <div class="flex-1">
+            <p id="toastTitle" class="text-xs font-bold text-slate-300 uppercase tracking-wide">Notice</p>
+            <p id="toastMessage" class="text-sm font-semibold text-white">Action completed</p>
+        </div>
+    </div>
+
+    <!-- Rules Modal Dialog -->
+    <div id="rulesModal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <h3 class="font-extrabold text-lg text-white flex items-center gap-2">
+                    <i class="fa-solid fa-book-open text-brand-400"></i> STOP! Game Rules
+                </h3>
+                <button onclick="game.closeRulesModal()" class="text-slate-400 hover:text-white p-1">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <div class="text-sm text-slate-300 space-y-3 max-h-[70vh] overflow-y-auto pr-2">
+                <p><strong class="text-yellow-300">1. The Alphabet Roll:</strong> One player starts the roll (A, B,
+                    C...). The designated opponent hits <strong class="text-rose-400">STOP</strong> to select the
+                    letter.</p>
+                <p><strong class="text-yellow-300">2. Filling Categories:</strong> All players must write words starting
+                    with that letter for every category (Name, Place, Animal, Thing, Movies, etc.).</p>
+                <p><strong class="text-yellow-300">3. Calling STOP:</strong> If any player completes all columns, they
+                    can hit the big <strong class="text-rose-400">STOP!</strong> button, ending the round immediately
+                    for everyone!</p>
+                <p><strong class="text-yellow-300">4. Scoring System:</strong></p>
+                <ul class="list-disc pl-5 space-y-1 text-xs text-slate-400">
+                    <li><span class="text-emerald-400 font-bold">Unique answer</span> (no other player wrote the same
+                        thing): <strong class="text-white">+1 point</strong>.</li>
+                    <li><span class="text-rose-400 font-bold">Duplicate answer</span> (two or more players wrote the
+                        identical word): <strong class="text-white">0 points</strong>.</li>
+                    <li><span class="text-slate-500 font-bold">Empty or invalid</span>: <strong class="text-white">0
+                            points</strong>.</li>
+                </ul>
+                <p class="text-xs text-slate-400 italic">Host can override and validate or disqualify contested answers
+                    on the review screen.</p>
+            </div>
+            <button onclick="game.closeRulesModal()"
+                class="w-full py-2.5 rounded-xl font-bold bg-slate-800 hover:bg-slate-700 text-white transition">
+                Got it!
+            </button>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-900 bg-slate-950/60 py-3 text-center text-xs text-slate-500">
+        STOP! Word Party Game • Pass & Play and Room Mode
+    </footer>
+
+    <script>
+        // Web Audio Synthesizer for high-performance sound effects without external MP3 files
+        class SoundFX {
+            constructor() {
+                this.ctx = null;
+                this.enabled = true;
+            }
+
+            initContext() {
+                if (!this.ctx) {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    if (AudioContext) {
+                        this.ctx = new AudioContext();
+                    }
+                }
+                if (this.ctx && this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+
+            toggleSound() {
+                this.enabled = !this.enabled;
+                const icon = document.getElementById('soundIcon');
+                if (this.enabled) {
+                    icon.className = 'fa-solid fa-volume-high';
+                    game.showToast('Sound ON', 'Audio effects are now enabled.');
+                    this.playClick();
+                } else {
+                    icon.className = 'fa-solid fa-volume-xmark';
+                    game.showToast('Sound OFF', 'Audio effects are muted.');
+                }
+            }
+
+            playTone(freq, type = 'sine', duration = 0.1, gainValue = 0.15) {
+                if (!this.enabled) return;
+                this.initContext();
+                if (!this.ctx) return;
+
+                try {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+
+                    gain.gain.setValueAtTime(gainValue, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + duration);
+
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + duration);
+                } catch (e) {
+                    console.error("Audio error", e);
+                }
+            }
+
+            playClick() {
+                this.playTone(600, 'triangle', 0.05, 0.1);
+            }
+
+            playLetterTick() {
+                this.playTone(440 + Math.random() * 200, 'square', 0.04, 0.08);
+            }
+
+            playStopAlarm() {
+                if (!this.enabled) return;
+                this.initContext();
+                this.playTone(880, 'sawtooth', 0.25, 0.25);
+                setTimeout(() => this.playTone(550, 'sawtooth', 0.4, 0.3), 150);
+            }
+
+            playSuccess() {
+                this.playTone(523.25, 'sine', 0.1, 0.15);
+                setTimeout(() => this.playTone(659.25, 'sine', 0.12, 0.15), 90);
+                setTimeout(() => this.playTone(783.99, 'sine', 0.25, 0.2), 180);
+            }
+
+            playCountdownTick() {
+                this.playTone(330, 'sine', 0.05, 0.1);
+            }
+        }
+
+        const soundManager = new SoundFX();
+    </script>
+
+    <script>
+        class StopPartyGame {
+            constructor() {
+                // Default Configuration
+                this.defaultCategories = ["Name", "Place", "Animal", "Thing", "Movie", "Fruit/Veggie"];
+                this.categories = [...this.defaultCategories];
+                this.selectedMode = 'passAndPlay'; // 'passAndPlay' or 'roomMultiplayer'
+                this.roomSubMode = 'create'; // 'create' or 'join'
+                this.roomCode = '';
+
+                // Players & Match State
+                this.players = [
+                    { id: 'p1', name: 'Player 1', score: 0 },
+                    { id: 'p2', name: 'Player 2', score: 0 }
+                ];
+                this.currentRound = 1;
+                this.totalRounds = 5;
+                this.timerDuration = 90; // seconds
+                this.timerRemaining = 90;
+                this.timerInterval = null;
+
+                // Round Variables
+                this.currentLetter = 'A';
+                this.isAlphabetRolling = false;
+                this.alphabetRollInterval = null;
+                this.speakerIndex = 0;
+                this.availableLetters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").filter(l => !['Q', 'X', 'Z'].includes(l)); // exclude super tough letters for party fun unless desired
+                this.usedLetters = [];
+
+                // Answers Store: { roundNum: { playerId: { categoryName: "Answer" } } }
+                this.roundSubmissions = {};
+                // Verification / Host Overrides: { roundNum: { categoryName: { playerId: { valid: boolean, unique: boolean, points: number } } } }
+                this.roundScoringReview = {};
+
+                // Active Player index for local Pass & Play input
+                this.currentTurnPlayerIndex = 0;
+                this.currentRoundDraftAnswers = {}; // temp answers per player in local mode
+                this.myId = 'host';
+            }
+
+            init() {
+                this.renderCategoryChips();
+                this.generateRandomRoomCode();
+                this.selectedMode = 'roomMultiplayer';
+            }
+
+            goToStep(step) {
+                soundManager.playClick();
+
+                const nameInput = document.getElementById('playerNameInput').value.trim();
+                if (step !== 'name' && !nameInput) {
+                    this.showToast('Name Required', 'Please enter your player nickname first!');
+                    return;
+                }
+
+                ['step-name', 'step-mode', 'step-host', 'step-join'].forEach(id => {
+                    document.getElementById(id).classList.add('hidden');
+                });
+                document.getElementById('step-' + step).classList.remove('hidden');
+            }
+
+            selectLobbyMode(mode) {
+                this.selectedMode = 'roomMultiplayer';
+                this.roomSubMode = mode;
+                this.goToStep(mode === 'create' ? 'host' : 'join');
+            }
+
+            generateRandomRoomCode() {
+                const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+                let code = '';
+                for (let i = 0; i < 4; i++) {
+                    code += chars.charAt(Math.floor(Math.random() * chars.length));
+                }
+                this.roomCode = code;
+                document.getElementById('roomBadgeCode').innerText = code;
+            }
+
+            copyRoomCode() {
+                soundManager.playClick();
+                const dummy = document.createElement('input');
+                document.body.appendChild(dummy);
+                dummy.value = this.roomCode;
+                dummy.select();
+                try {
+                    document.execCommand('copy');
+                    this.showToast('Room Code Copied!', `Code ${this.roomCode} copied to clipboard.`);
+                } catch (e) {
+                    this.showToast('Room Code', this.roomCode);
+                }
+                document.body.removeChild(dummy);
+            }
+
+            renderCategoryChips() {
+                const container = document.getElementById('categoriesChipsList');
+                container.innerHTML = '';
+                this.categories.forEach((cat, index) => {
+                    const chip = document.createElement('span');
+                    chip.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-semibold bg-slate-800 text-slate-200 border border-slate-700';
+                    chip.innerHTML = `
+            <span>${cat}</span>
+            <button type="button" onclick="game.removeCategory(${index})" class="text-slate-400 hover:text-rose-400 ml-1">
+              <i class="fa-solid fa-xmark text-[10px]"></i>
+            </button>
+          `;
+                    container.appendChild(chip);
+                });
+                document.getElementById('catCountPill').innerText = this.categories.length;
+            }
+
+            addCustomCategory() {
+                const input = document.getElementById('newCategoryInput');
+                const val = input.value.trim();
+                if (!val) return;
+                if (this.categories.length >= 10) {
+                    this.showToast('Limit Reached', 'Maximum 10 categories recommended for screen fit.');
+                    return;
+                }
+                this.categories.push(val);
+                input.value = '';
+                soundManager.playClick();
+                this.renderCategoryChips();
+            }
+
+            removeCategory(index) {
+                if (this.categories.length <= 3) {
+                    this.showToast('Cannot Remove', 'You need at least 3 categories to play.');
+                    return;
+                }
+                this.categories.splice(index, 1);
+                soundManager.playClick();
+                this.renderCategoryChips();
+            }
+
+            resetDefaultCategories() {
+                this.categories = [...this.defaultCategories];
+                soundManager.playClick();
+                this.renderCategoryChips();
+                this.showToast('Reset Done', 'Default categories restored.');
+            }
+
+            startLobbyToAlphabet() {
+                const nameInput = document.getElementById('playerNameInput').value.trim();
+                const myName = nameInput || 'Player';
+
+                this.totalRounds = parseInt(document.getElementById('roundsSelect').value, 10) || 5;
+                this.timerDuration = parseInt(document.getElementById('timerSelect').value, 10) || 90;
+
+                if (this.selectedMode === 'roomMultiplayer') {
+                    if (this.roomSubMode === 'join') {
+                        const entered = document.getElementById('joinRoomCodeInput').value.trim().toUpperCase();
+                        if (!entered || entered.length < 3) {
+                            this.showToast('Missing Code', 'Please enter a valid room code.');
+                            return;
+                        }
+
+                        this.roomCode = entered;
+                        this.myId = 'joiner_' + Date.now();
+                        this.sendWsMessage('JOIN_ROOM', { code: this.roomCode, playerId: this.myId, playerName: myName });
+                    } else {
+                        this.myId = 'host_' + Date.now();
+                        this.sendWsMessage('CREATE_ROOM', { code: this.roomCode, playerId: this.myId, playerName: myName });
+                    }
+                    document.getElementById('roomBadge').classList.remove('hidden');
+                    document.getElementById('roomBadgeCode').innerText = this.roomCode;
+                } else {
+                    document.getElementById('roomBadge').classList.add('hidden');
+                    if (nameInput) this.players[0].name = nameInput;
+                }
+
+                soundManager.playSuccess();
+                this.showScreen('screen-letter');
+                this.prepareAlphabetScreen();
+            }
+
+            prepareAlphabetScreen() {
+                document.getElementById('letterRoundNum').innerText = this.currentRound;
+                document.getElementById('letterRoundTotal').innerText = this.totalRounds;
+
+                const activePicker = this.players[this.speakerIndex % this.players.length];
+
+                document.getElementById('currentPickerName').innerText = activePicker.name;
+
+                const box = document.getElementById('alphabetDisplayBox');
+                box.innerText = '?';
+                box.classList.remove('neon-border', 'border-emerald-500', 'text-emerald-400');
+                box.classList.add('border-brand-500/80', 'text-yellow-300');
+
+                const isMyTurn = this.selectedMode === 'passAndPlay' || this.myId === activePicker.id;
+
+                if (isMyTurn) {
+                    document.getElementById('startRollBtn').classList.remove('hidden');
+                    document.getElementById('stopRollBtn').classList.remove('hidden');
+                    document.getElementById('stopRollBtn').disabled = true;
+                    document.getElementById('stopRollBtn').classList.add('opacity-40', 'cursor-not-allowed');
+                    document.getElementById('rollerSubtext').innerText = `Your turn! Press "Start Roll" and then STOP!`;
+                } else {
+                    document.getElementById('startRollBtn').classList.add('hidden');
+                    document.getElementById('stopRollBtn').classList.add('hidden');
+                    document.getElementById('rollerSubtext').innerText = `Waiting for ${activePicker.name} to pick a letter...`;
+                }
+
+                document.getElementById('confirmLetterBtn').classList.add('hidden');
+            }
+
+            startAlphabetTicker(fromSync = false) {
+                if (this.selectedMode === 'roomMultiplayer' && !fromSync) {
+                    this.sendWsMessage('START_ROLL');
+                    return; // Wait for broadcast to prevent double execution
+                }
+
+                if (this.isAlphabetRolling) return;
+                soundManager.playClick();
+                this.isAlphabetRolling = true;
+
+                const activePicker = this.players[this.speakerIndex % this.players.length];
+                const isMyTurn = this.selectedMode === 'passAndPlay' || this.myId === activePicker.id;
+
+                document.getElementById('startRollBtn').classList.add('hidden');
+
+                if (isMyTurn) {
+                    const stopBtn = document.getElementById('stopRollBtn');
+                    stopBtn.classList.remove('hidden');
+                    stopBtn.disabled = false;
+                    stopBtn.classList.remove('opacity-40', 'cursor-not-allowed');
+                    document.getElementById('rollerSubtext').innerText = "Scrolling A to Z! Hit STOP now!";
+                } else {
+                    document.getElementById('rollerSubtext').innerText = `${activePicker.name} is picking...`;
+                }
+
+                const box = document.getElementById('alphabetDisplayBox');
+                let idx = 0;
+                this.alphabetRollInterval = setInterval(() => {
+                    idx = (idx + 1) % this.availableLetters.length;
+                    const letter = this.availableLetters[idx];
+                    box.innerText = letter;
+                    soundManager.playLetterTick();
+                }, 90);
+            }
+
+            stopAlphabetTicker(forcedLetter = null) {
+                if (!this.isAlphabetRolling && !forcedLetter) return;
+
+                if (this.selectedMode === 'roomMultiplayer' && !forcedLetter) {
+                    const currentDisplayed = document.getElementById('alphabetDisplayBox').innerText;
+                    const letter = currentDisplayed !== '?' ? currentDisplayed : 'R';
+                    this.sendWsMessage('STOP_ROLL', { letter });
+                    return; // Wait for broadcast to prevent double execution
+                }
+
+                clearInterval(this.alphabetRollInterval);
+                this.isAlphabetRolling = false;
+                soundManager.playStopAlarm();
+
+                if (forcedLetter) {
+                    this.currentLetter = forcedLetter;
+                } else {
+                    const currentDisplayed = document.getElementById('alphabetDisplayBox').innerText;
+                    this.currentLetter = currentDisplayed !== '?' ? currentDisplayed : 'R';
+                }
+
+                this.usedLetters.push(this.currentLetter);
+
+                const box = document.getElementById('alphabetDisplayBox');
+                box.innerText = this.currentLetter;
+                box.classList.add('neon-border', 'border-emerald-500', 'text-emerald-400');
+
+                document.getElementById('stopRollBtn').classList.add('hidden');
+
+                const activePicker = this.players[this.speakerIndex % this.players.length];
+                const isMyTurn = this.selectedMode === 'passAndPlay' || this.myId === activePicker.id;
+
+                if (isMyTurn) {
+                    const confirmBtn = document.getElementById('confirmLetterBtn');
+                    confirmBtn.classList.remove('hidden');
+                    document.getElementById('pickedLetterConfirm').innerText = this.currentLetter;
+                    document.getElementById('rollerSubtext').innerText = `Letter locked on ${this.currentLetter}! Ready to start?`;
+                } else {
+                    document.getElementById('rollerSubtext').innerText = `Letter locked on ${this.currentLetter}! Waiting for ${activePicker.name} to start round...`;
+                }
+            }
+
+            beginRoundWithLetter(fromSync = false) {
+                if (this.selectedMode === 'roomMultiplayer' && !fromSync) {
+                    this.sendWsMessage('PLAY_ROUND');
+                    return;
+                }
+                soundManager.playSuccess();
+                this.currentTurnPlayerIndex = 0;
+                this.currentRoundDraftAnswers = {};
+                this.players.forEach(p => {
+                    this.currentRoundDraftAnswers[p.id] = {};
+                });
+
+                this.showScreen('screen-gameplay');
+                this.renderGameplayForm();
+                this.startRoundTimer();
+            }
+
+            renderGameplayForm() {
+                document.getElementById('activeLetterBadge').innerText = this.currentLetter;
+                document.getElementById('activeLetterText').innerText = this.currentLetter;
+                this.updateActivePlayerLabel();
+
+                const form = document.getElementById('categoryInputsForm');
+                form.innerHTML = '';
+
+                this.categories.forEach(cat => {
+                    const card = document.createElement('div');
+                    card.className = 'bg-slate-950/80 border border-slate-800 rounded-2xl p-4 transition focus-within:border-brand-500 focus-within:ring-1 focus-within:ring-brand-500';
+                    card.innerHTML = `
+            <div class="flex items-center justify-between mb-1.5">
+              <label for="cat_inp_${cat}" class="text-xs font-bold uppercase tracking-wider text-slate-300">
+                ${cat}
+              </label>
+              <span class="text-[10px] font-bold text-yellow-400 bg-yellow-400/10 px-2 py-0.5 rounded">Starts with '${this.currentLetter}'</span>
+            </div>
+            <input type="text" id="cat_inp_${cat}" data-category="${cat}"
+                   placeholder="e.g. ${this.getExampleHint(cat, this.currentLetter)}"
+                   oninput="game.onCategoryInputChanged()"
+                   class="category-input-field w-full bg-slate-900 border border-slate-700/80 rounded-xl px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-brand-400 font-medium">
+          `;
+                    form.appendChild(card);
+                });
+
+                this.onCategoryInputChanged();
+            }
+
+            getExampleHint(cat, letter) {
+                const hints = {
+                    'Name': `${letter}onald`,
+                    'Place': `${letter}ome`,
+                    'Animal': `${letter}abbit`,
+                    'Thing': `${letter}adio`,
+                    'Movie': `${letter}atpocalypse`,
+                    'Fruit/Veggie': `${letter}adish`
+                };
+                return hints[cat] || `${letter}...`;
+            }
+
+            updateActivePlayerLabel() {
+                if (this.selectedMode === 'roomMultiplayer') {
+                    const myP = this.players.find(p => p.id === this.myId);
+                    document.getElementById('activePlayerName').innerText = myP ? myP.name : 'All Players';
+                } else {
+                    const activeP = this.players[this.currentTurnPlayerIndex];
+                    document.getElementById('activePlayerName').innerText = activeP ? activeP.name : 'All Players';
+                }
+            }
+
+            onCategoryInputChanged() {
+                const inputs = document.querySelectorAll('.category-input-field');
+                let filled = 0;
+                inputs.forEach(inp => {
+                    if (inp.value.trim().length > 0) filled++;
+                });
+                document.getElementById('completedFieldCount').innerText = `${filled} / ${this.categories.length} Answered`;
+            }
+
+            startRoundTimer() {
+                clearInterval(this.timerInterval);
+                this.timerRemaining = this.timerDuration;
+                this.updateTimerDisplay();
+
+                this.timerInterval = setInterval(() => {
+                    this.timerRemaining--;
+                    this.updateTimerDisplay();
+
+                    if (this.timerRemaining <= 10 && this.timerRemaining > 0) {
+                        soundManager.playCountdownTick();
+                    }
+
+                    if (this.timerRemaining <= 0) {
+                        clearInterval(this.timerInterval);
+                        this.handleRoundTimeOut();
+                    }
+                }, 1000);
+            }
+
+            updateTimerDisplay() {
+                const mins = Math.floor(this.timerRemaining / 60);
+                const secs = this.timerRemaining % 60;
+                const text = `${mins < 10 ? '0' + mins : mins}:${secs < 10 ? '0' + secs : secs}`;
+                const display = document.getElementById('gameplayTimerText');
+                display.innerText = text;
+
+                if (this.timerRemaining <= 15) {
+                    display.classList.add('text-rose-400', 'animate-pulse');
+                } else {
+                    display.classList.remove('text-rose-400', 'animate-pulse');
+                }
+            }
+
+            triggerPlayerStop(fromSync = false, syncName = '') {
+                if (!fromSync && this.selectedMode === 'roomMultiplayer') {
+                    const myName = this.players.find(p => p.id === this.myId)?.name || 'Someone';
+                    this.sendWsMessage('END_ROUND', { by: myName });
+                    return; // Wait for broadcast
+                }
+
+                soundManager.playStopAlarm();
+                clearInterval(this.timerInterval);
+                this.timerRemaining = 0; // ensure timer is stopped
+
+                if (fromSync && this.selectedMode === 'roomMultiplayer') {
+                    const myName = this.players.find(p => p.id === this.myId)?.name || 'Someone';
+                    if (syncName === myName) {
+                        this.showToast('STOP WAS CALLED!', `You finished and called STOP! Hands in the air!`);
+                    } else {
+                        this.showToast('STOP WAS CALLED!', `${syncName} called STOP! Hands in the air!`);
+                    }
+                } else {
+                    const stopper = this.players[this.currentTurnPlayerIndex].name;
+                    this.showToast('STOP WAS CALLED!', `${stopper} finished and called STOP! Hands in the air!`);
+                }
+
+                this.collectCurrentPlayerAnswers();
+                this.proceedToNextPlayerOrScoring();
+            }
+
+            handleRoundTimeOut(fromSync = false) {
+                soundManager.playStopAlarm();
+                this.showToast('TIME IS UP!', 'Timer expired! Hands off keyboards and phones!');
+                this.timerRemaining = 0;
+                this.collectCurrentPlayerAnswers();
+                this.proceedToNextPlayerOrScoring();
+            }
+
+            collectCurrentPlayerAnswers() {
+                const playerId = this.selectedMode === 'roomMultiplayer' ? this.myId : this.players[this.currentTurnPlayerIndex].id;
+                const inputs = document.querySelectorAll('.category-input-field');
+                const playerObj = {};
+
+                inputs.forEach(inp => {
+                    const category = inp.getAttribute('data-category');
+                    playerObj[category] = inp.value.trim();
+                });
+
+                this.currentRoundDraftAnswers[playerId] = playerObj;
+            }
+
+            proceedToNextPlayerOrScoring() {
+                // If Pass & Play with more players who need their turn on the same device
+                if (this.selectedMode === 'passAndPlay' && this.currentTurnPlayerIndex < this.players.length - 1) {
+                    this.currentTurnPlayerIndex++;
+                    this.showToast('Next Turn!', `Pass device to ${this.players[this.currentTurnPlayerIndex].name}`);
+                    this.renderGameplayForm();
+                    this.startRoundTimer();
+                    return;
+                }
+
+                if (this.selectedMode === 'roomMultiplayer') {
+                    const myAns = this.currentRoundDraftAnswers[this.myId] || {};
+                    this.sendWsMessage('SUBMIT_ANSWERS', { answers: myAns });
+
+                    document.getElementById('screen-gameplay').classList.add('hidden');
+                    this.showToast('Syncing...', 'Waiting for server to collect answers...');
+
+                    // Wait slightly for websocket propagation before continuing.
+                    setTimeout(() => {
+                        this.roundSubmissions[this.currentRound] = JSON.parse(JSON.stringify(this.currentRoundDraftAnswers));
+                        this.calculateRoundScores(this.currentRound);
+                        this.showScreen('screen-scoring');
+                        this.renderScoringReviewScreen();
+                    }, 1500);
+                    return;
+                }
+
+                // Lock in submissions for the round
+                this.roundSubmissions[this.currentRound] = JSON.parse(JSON.stringify(this.currentRoundDraftAnswers));
+                this.calculateRoundScores(this.currentRound);
+                this.showScreen('screen-scoring');
+                this.renderScoringReviewScreen();
+            }
+
+            calculateRoundScores(roundNum) {
+                const submissions = this.roundSubmissions[roundNum];
+                this.roundScoringReview[roundNum] = {};
+
+                this.categories.forEach(cat => {
+                    this.roundScoringReview[roundNum][cat] = {};
+                    // Gather all words for this category in lower case
+                    const wordCounts = {};
+
+                    this.players.forEach(p => {
+                        const rawWord = (submissions[p.id] && submissions[p.id][cat]) ? submissions[p.id][cat].trim() : '';
+                        const normalized = rawWord.toLowerCase();
+                        if (normalized) {
+                            wordCounts[normalized] = (wordCounts[normalized] || 0) + 1;
+                        }
+                    });
+
+                    this.players.forEach(p => {
+                        const rawWord = (submissions[p.id] && submissions[p.id][cat]) ? submissions[p.id][cat].trim() : '';
+                        const normalized = rawWord.toLowerCase();
+                        const startsWithCorrectLetter = normalized.startsWith(this.currentLetter.toLowerCase());
+
+                        let points = 0;
+                        let status = 'Invalid';
+
+                        if (!rawWord) {
+                            status = 'Empty';
+                            points = 0;
+                        } else if (!startsWithCorrectLetter) {
+                            status = `Wrong Letter (Needs '${this.currentLetter}')`;
+                            points = 0;
+                        } else if (wordCounts[normalized] > 1) {
+                            // DUPLICATE RULE: User requested 0 points for identical matching answers
+                            status = 'Duplicate (0 pts)';
+                            points = 0;
+                        } else {
+                            // UNIQUE RULE: Unique answer gets 1 point
+                            status = 'Unique (+1 pt)';
+                            points = 1;
+                        }
+
+                        this.roundScoringReview[roundNum][cat][p.id] = {
+                            word: rawWord,
+                            status: status,
+                            points: points,
+                            approved: points > 0
+                        };
+                    });
+                });
+
+                this.recomputeTotalPlayerScores();
+            }
+
+            recomputeTotalPlayerScores() {
+                // Reset scores to 0 and recalculate across all completed rounds
+                this.players.forEach(p => p.score = 0);
+
+                Object.keys(this.roundScoringReview).forEach(rNum => {
+                    const categoriesObj = this.roundScoringReview[rNum];
+                    Object.keys(categoriesObj).forEach(cat => {
+                        const playerReviews = categoriesObj[cat];
+                        this.players.forEach(p => {
+                            if (playerReviews[p.id] && playerReviews[p.id].points) {
+                                p.score += playerReviews[p.id].points;
+                            }
+                        });
+                    });
+                });
+            }
+
+            toggleHostOverride(roundNum, category, playerId, fromSync = false, forceApproved = null) {
+                if (!fromSync) {
+                    const isHost = this.selectedMode === 'passAndPlay' || this.myId.startsWith('host_');
+                    if (!isHost) return;
+                    soundManager.playClick();
+                }
+
+                const item = this.roundScoringReview[roundNum][category][playerId];
+                if (!item) return;
+
+                if (this.selectedMode === 'roomMultiplayer' && !fromSync) {
+                    this.sendWsMessage('TOGGLE_SCORE', { roundNum, category, playerId, approved: !item.approved });
+                    return;
+                }
+
+                item.approved = fromSync ? forceApproved : !item.approved;
+                if (item.approved) {
+                    item.points = 1;
+                    item.status = 'Host Approved (+1 pt)';
+                } else {
+                    item.points = 0;
+                    item.status = 'Host Disqualified (0 pts)';
+                }
+
+                this.recomputeTotalPlayerScores();
+                this.renderScoringReviewScreen();
+            }
+
+            renderScoringReviewScreen() {
+                const isHost = this.selectedMode === 'passAndPlay' || this.myId.startsWith('host_');
+                const proceedBtn = document.querySelector('#screen-scoring button[onclick="game.proceedToNextRoundOrFinish()"]');
+                if (proceedBtn) proceedBtn.style.display = isHost ? 'flex' : 'none';
+
+                document.getElementById('scoringRoundNumber').innerText = this.currentRound;
+                document.getElementById('scoringRoundLetter').innerText = this.currentLetter;
+
+                const container = document.getElementById('scoringCardsContainer');
+                container.innerHTML = '';
+
+                const currentReview = this.roundScoringReview[this.currentRound];
+
+                this.categories.forEach(cat => {
+                    this.players.forEach(p => {
+                        const entry = currentReview[cat][p.id];
+                        const card = document.createElement('div');
+                        card.className = 'bg-slate-800/80 border border-slate-700 rounded-xl p-4 shadow-md flex flex-col justify-between gap-3 transition hover:border-slate-600 hover:bg-slate-800';
+
+                        const statusClass = entry.points > 0
+                            ? 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20'
+                            : entry.word ? 'text-amber-400 bg-amber-400/10 border-amber-400/20' : 'text-slate-500 bg-slate-800/40 border-slate-700';
+
+                        card.innerHTML = `
+                            <div class="flex justify-between items-center">
+                                <h3 class="font-bold text-white text-base">${p.name}</h3>
+                                <span class="px-2.5 py-0.5 rounded-full border text-[10px] font-bold uppercase tracking-wider ${statusClass}">
+                                    ${entry.status}
+                                </span>
+                            </div>
+                            
+                            <div class="text-sm space-y-1">
+                                <p class="font-mono text-lg ${entry.word ? 'text-yellow-300 font-bold' : 'text-slate-500 italic'}">${entry.word || '(None)'}</p>
+                                <p class="text-xs text-slate-400">Category: <span class="font-semibold text-slate-300">${cat}</span></p>
+                                <p class="text-xs text-slate-400">Points: <span class="font-bold ${entry.points > 0 ? 'text-emerald-400' : 'text-slate-500'}">+${entry.points}</span></p>
+                            </div>
+                            
+                            <div class="flex justify-end items-center border-t border-slate-700/50 pt-3 mt-1">
+                                <div class="flex items-center gap-3">
+                                    ${isHost ? `
+                                    <button onclick="game.toggleHostOverride(${this.currentRound}, '${cat}', '${p.id}')"
+                                            class="text-[11px] font-bold transition ${entry.approved ? 'text-slate-400 hover:text-rose-400' : 'text-amber-500 hover:text-amber-400'}">
+                                        ${entry.approved ? 'Close' : 'Approve'}
+                                    </button>` : `<span class="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Host Only</span>`}
+                                </div>
+                            </div>
+                        `;
+                        container.appendChild(card);
+                    });
+                });
+
+                // Render mini standings cards
+                const standingsGrid = document.getElementById('standingsCardsGrid');
+                standingsGrid.innerHTML = '';
+                const sorted = [...this.players].sort((a, b) => b.score - a.score);
+
+                sorted.forEach((p, rank) => {
+                    const card = document.createElement('div');
+                    card.className = 'bg-slate-950 border border-slate-800 rounded-2xl p-3 flex items-center justify-between';
+                    card.innerHTML = `
+            <div>
+              <span class="text-[10px] uppercase font-bold text-slate-500">Rank #${rank + 1}</span>
+              <p class="font-bold text-white text-sm truncate max-w-[100px]">${p.name}</p>
+            </div>
+            <div class="text-right">
+              <span class="font-display text-lg text-yellow-400">${p.score}</span>
+              <span class="text-[10px] text-slate-400 block font-semibold">PTS</span>
+            </div>
+          `;
+                    standingsGrid.appendChild(card);
+                });
+            }
+
+            proceedToNextRoundOrFinish(fromSync = false) {
+                const isHost = this.selectedMode === 'passAndPlay' || this.myId.startsWith('host_');
+                if (this.selectedMode === 'roomMultiplayer' && !fromSync) {
+                    if (!isHost) return;
+                    this.sendWsMessage('PROCEED_NEXT_ROUND');
+                    return;
+                }
+
+                soundManager.playClick();
+                if (this.currentRound < this.totalRounds) {
+                    this.currentRound++;
+                    this.speakerIndex++;
+                    this.showScreen('screen-letter');
+                    this.prepareAlphabetScreen();
+                } else {
+                    // Final Game Over
+                    this.showPodiumWinnerScreen();
+                }
+            }
+
+            showPodiumWinnerScreen() {
+                soundManager.playSuccess();
+                this.showScreen('screen-podium');
+
+                const sorted = [...this.players].sort((a, b) => b.score - a.score);
+                const winner = sorted[0];
+
+                document.getElementById('winnerNameDisplay').innerText = winner.name;
+                document.getElementById('winnerScoreDisplay').innerText = `Grand Total: ${winner.score} Points across ${this.totalRounds} Rounds`;
+
+                const list = document.getElementById('finalLeaderboardList');
+                list.innerHTML = '';
+
+                sorted.forEach((p, idx) => {
+                    const item = document.createElement('div');
+                    item.className = 'py-3 flex items-center justify-between';
+                    const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `#${idx + 1}`;
+                    item.innerHTML = `
+            <div class="flex items-center gap-3">
+              <span class="text-lg font-bold">${medal}</span>
+              <span class="font-bold text-white">${p.name}</span>
+            </div>
+            <div class="font-display text-xl text-yellow-400">
+              ${p.score} <span class="text-xs text-slate-400 font-sans font-bold">PTS</span>
+            </div>
+          `;
+                    list.appendChild(item);
+                });
+            }
+
+            restartSameSettings() {
+                soundManager.playClick();
+                this.currentRound = 1;
+                this.speakerIndex = 0;
+                this.roundSubmissions = {};
+                this.roundScoringReview = {};
+                this.players.forEach(p => p.score = 0);
+                this.showScreen('screen-letter');
+                this.prepareAlphabetScreen();
+            }
+
+            resetToLobby() {
+                soundManager.playClick();
+                clearInterval(this.timerInterval);
+                clearInterval(this.alphabetRollInterval);
+                this.currentRound = 1;
+                this.roundSubmissions = {};
+                this.roundScoringReview = {};
+                this.players = [
+                    { id: 'p1', name: 'Player 1', score: 0 },
+                    { id: 'p2', name: 'Player 2', score: 0 }
+                ];
+                this.generateRandomRoomCode();
+                this.showScreen('screen-lobby');
+                this.goToStep('name');
+            }
+
+            init() {
+                this.renderCategoryChips();
+                this.generateRandomRoomCode();
+                this.showScreen('screen-lobby');
+                this.goToStep('name');
+                this.initWebSocket();
+            }
+
+            initWebSocket() {
+                if (this.ws) return;
+                // Automatically connect to the right server depending on where it's hosted
+                let wsUrl;
+                if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                    wsUrl = `ws://${window.location.hostname}:8091`; // Local backend
+                } else {
+                    // IMPORTANT FOR DEPLOYMENT: Replace this URL with your backend cloud URL (e.g., Render URL)
+                    // Example: wsUrl = 'wss://my-stop-game-server.onrender.com';
+                    wsUrl = 'wss://' + window.location.host; 
+                }
+                this.ws = new WebSocket(wsUrl);
+
+                this.ws.onmessage = (event) => {
+                    const msg = JSON.parse(event.data);
+                    if (msg.type === "ROOM_STATE") {
+                        const oldLength = this.players.length;
+                        this.players = msg.players;
+
+                        if (this.players.length > oldLength && oldLength > 0) {
+                            const newPlayer = this.players[this.players.length - 1];
+                            if (newPlayer.id !== this.myId) {
+                                this.showToast('Player Joined!', `${newPlayer.name} has entered the room.`);
+                            }
+                        } else if (this.players.length < oldLength) {
+                            this.showToast('Player Left', `A player has left the room.`);
+                        }
+                        if (!document.getElementById('screen-letter').classList.contains('hidden')) {
+                            this.prepareAlphabetScreen();
+                        }
+                    } else if (msg.type === "ERROR") {
+                        this.showToast('Error', msg.message);
+                    } else if (msg.type === "ROOM_DESTROYED") {
+                        this.simulateHostLeft();
+                    } else if (msg.type === "START_ROLL") {
+                        this.startAlphabetTicker(true);
+                    } else if (msg.type === "STOP_ROLL") {
+                        this.stopAlphabetTicker(msg.letter);
+                    } else if (msg.type === "PLAY_ROUND") {
+                        this.beginRoundWithLetter(true);
+                    } else if (msg.type === "END_ROUND") {
+                        if (this.timerRemaining > 0 && !document.getElementById('screen-gameplay').classList.contains('hidden')) {
+                            this.triggerPlayerStop(true, msg.by);
+                        }
+                    } else if (msg.type === "SYNC_ANSWERS") {
+                        Object.keys(msg.answers).forEach(p_id => {
+                            this.currentRoundDraftAnswers[p_id] = msg.answers[p_id];
+                        });
+                    } else if (msg.type === "TOGGLE_SCORE") {
+                        this.toggleHostOverride(msg.roundNum, msg.category, msg.playerId, true, msg.approved);
+                    } else if (msg.type === "PROCEED_NEXT_ROUND") {
+                        this.proceedToNextRoundOrFinish(true);
+                    }
+                };
+
+                this.ws.onclose = () => {
+                    setTimeout(() => { this.ws = null; this.initWebSocket(); }, 2000);
+                }
+            }
+
+            sendWsMessage(action, data = {}) {
+                if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+                    this.ws.send(JSON.stringify({ action, ...data }));
+                }
+            }
+
+            showHomePrompt() {
+                if (confirm("Return to Lobby? Current game progress will be lost.")) {
+                    this.resetToLobby();
+                }
+            }
+
+            showScreen(screenId) {
+                const screens = ['screen-lobby', 'screen-letter', 'screen-gameplay', 'screen-scoring', 'screen-podium'];
+                screens.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) {
+                        if (id === screenId) {
+                            el.classList.remove('hidden');
+                        } else {
+                            el.classList.add('hidden');
+                        }
+                    }
+                });
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+
+            showToast(title, message) {
+                const toast = document.getElementById('toastNotification');
+                document.getElementById('toastTitle').innerText = title;
+                document.getElementById('toastMessage').innerText = message;
+                toast.classList.remove('opacity-0', 'translate-y-20', 'pointer-events-none');
+
+                clearTimeout(this.toastTimeout);
+                this.toastTimeout = setTimeout(() => {
+                    toast.classList.add('opacity-0', 'translate-y-20', 'pointer-events-none');
+                }, 3200);
+            }
+
+            openRulesModal() {
+                soundManager.playClick();
+                document.getElementById('rulesModal').classList.remove('hidden');
+                document.getElementById('rulesModal').classList.add('flex');
+            }
+
+            leaveRoomPrompt() {
+                soundManager.playClick();
+                const msg = this.roomSubMode === 'create'
+                    ? "You are the Host! Leaving will destroy this room for all players. Leave anyway?"
+                    : "Are you sure you want to leave this room?";
+
+                if (confirm(msg)) {
+                    this.leaveRoom();
+                }
+            }
+
+            leaveRoom() {
+                if (this.selectedMode === 'roomMultiplayer') {
+                    this.sendWsMessage('LEAVE_ROOM');
+                }
+                if (this.roomSubMode === 'create') {
+                    this.showToast('Room Destroyed', 'You closed the room. All players were kicked.');
+                } else {
+                    this.showToast('Left Room', 'You left the game room.');
+                }
+                document.getElementById('roomBadge').classList.add('hidden');
+                this.resetToLobby();
+            }
+
+            simulateHostLeft() {
+                if (this.roomSubMode === 'join') {
+                    soundManager.playStopAlarm();
+                    this.showToast('Host Disconnected', 'The Host has left the room. The room was automatically destroyed and you were kicked.');
+                    document.getElementById('roomBadge').classList.add('hidden');
+                    this.resetToLobby();
+                }
+            }
+
+            closeRulesModal() {
+                soundManager.playClick();
+                document.getElementById('rulesModal').classList.add('hidden');
+                document.getElementById('rulesModal').classList.remove('flex');
+            }
+        }
+
+        // Initialize application instance on DOM load
+        const game = new StopPartyGame();
+        window.addEventListener('DOMContentLoaded', () => {
+            game.init();
+        });
+    </script>
+</body>
+
+</html>
