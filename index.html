@@ -458,7 +458,8 @@
 
                 <!-- Answers Comparison Table -->
                 <!-- Answers Comparison Cards -->
-                <div id="scoringCardsContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6 w-full">
+                <div id="scoringCardsContainer"
+                    class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6 w-full">
                     <!-- Dynamically populated review cards -->
                 </div>
 
@@ -1395,7 +1396,7 @@
                 } else {
                     // IMPORTANT FOR DEPLOYMENT: Replace this URL with your backend cloud URL (e.g., Render URL)
                     // Example: wsUrl = 'wss://my-stop-game-server.onrender.com';
-                    wsUrl = 'wss://' + window.location.host; 
+                    wsUrl = 'wss://stop-game-wm83.onrender.com';
                 }
                 this.ws = new WebSocket(wsUrl);
 
