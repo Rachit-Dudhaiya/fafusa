@@ -1,0 +1,81 @@
+[
+    {
+        "label": "asyncio",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "asyncio",
+        "description": "asyncio",
+        "detail": "asyncio",
+        "documentation": {}
+    },
+    {
+        "label": "websockets",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "websockets",
+        "description": "websockets",
+        "detail": "websockets",
+        "documentation": {}
+    },
+    {
+        "label": "json",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "json",
+        "description": "json",
+        "detail": "json",
+        "documentation": {}
+    },
+    {
+        "label": "threading",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "threading",
+        "description": "threading",
+        "detail": "threading",
+        "documentation": {}
+    },
+    {
+        "label": "SimpleHTTPRequestHandler",
+        "importPath": "http.server",
+        "description": "http.server",
+        "isExtraImport": true,
+        "detail": "http.server",
+        "documentation": {}
+    },
+    {
+        "label": "HTTPServer",
+        "importPath": "http.server",
+        "description": "http.server",
+        "isExtraImport": true,
+        "detail": "http.server",
+        "documentation": {}
+    },
+    {
+        "label": "run_http_server",
+        "kind": 2,
+        "importPath": "server",
+        "description": "server",
+        "peekOfCode": "def run_http_server():\n    print(\"Starting HTTP Server on port 8090...\")\n    server = HTTPServer((\"0.0.0.0\", 8090), SimpleHTTPRequestHandler)\n    server.serve_forever()\nif __name__ == \"__main__\":\n    t = threading.Thread(target=run_http_server, daemon=True)\n    t.start()\n    asyncio.run(main())",
+        "detail": "server",
+        "documentation": {}
+    },
+    {
+        "label": "rooms",
+        "kind": 5,
+        "importPath": "server",
+        "description": "server",
+        "peekOfCode": "rooms = {}\nclient_info = {} \nasync def handler(websocket):\n    try:\n        async for message in websocket:\n            data = json.loads(message)\n            action = data.get(\"action\")\n            if action == \"CREATE_ROOM\":\n                code = data[\"code\"]\n                player_id = data[\"playerId\"]",
+        "detail": "server",
+        "documentation": {}
+    },
+    {
+        "label": "client_info",
+        "kind": 5,
+        "importPath": "server",
+        "description": "server",
+        "peekOfCode": "client_info = {} \nasync def handler(websocket):\n    try:\n        async for message in websocket:\n            data = json.loads(message)\n            action = data.get(\"action\")\n            if action == \"CREATE_ROOM\":\n                code = data[\"code\"]\n                player_id = data[\"playerId\"]\n                player_name = data[\"playerName\"]",
+        "detail": "server",
+        "documentation": {}
+    }
+]
